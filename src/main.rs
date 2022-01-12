@@ -40,9 +40,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     log::debug!("input arguments {:?}", cli_arguments);
 
-
     let personal_desk_address = "C2:6D:5B:C4:17:12";
-    let desk = idasen_desk::Desk::new(personal_desk_address).await;
+    let desk = idasen_desk::Desk::new(personal_desk_address).await?;
 
     log::info!("connected to desk: {:?}", desk.name);
 
