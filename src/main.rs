@@ -1,6 +1,5 @@
 use std::error::Error;
 
-use btleplug::platform::Manager;
 use clap::Parser;
 use env_logger::Target;
 use log::LevelFilter;
