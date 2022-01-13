@@ -1,4 +1,7 @@
 use std::error::Error;
+use std::sync::{Arc, Mutex};
+use std::thread::sleep;
+use std::time::Duration;
 
 use clap::Parser;
 use env_logger::Target;
@@ -16,7 +19,12 @@ struct Args {
     #[clap(long)]
     stand: bool,
 
-    #[clap(long = "move", short = 'm')]
+    /// When specified, displays desk height to the console, if move, sit or stand is not specified,
+    /// then just monitor only log on manual move triggered by the user.
+    #[clap(long, short = 'm')]
+    monitor: bool,
+
+    #[clap(long = "move", short = 't')]
     move_to: Option<u8>,
 }
 
@@ -70,6 +78,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
         desk.move_to_target(0.74).await?;
     } else {
         desk.move_to_target(1.12).await?;
+    }
+
+    if cli_arguments.monitor && (!cli_arguments.stand && !cli_arguments.sit) {
+        let desk_height = Arc::new(Mutex::new(0.0));
+        let previous_desk_height = 0.0;
+
+        let _ = desk.monitor_height_notification_stream(desk_height.clone());
+
+        loop {
+            let height = *desk_height.lock().unwrap();
+            if height != previous_desk_height {
+                log::info!("height: {height}")
+            }
+
+            // small sleep between checks to not to spam CPU cycles.
+            sleep(Duration::from_millis(50))
+        }
     }
 
     Ok(())
