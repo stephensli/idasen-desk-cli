@@ -73,23 +73,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    // otherwise lets go and determine it and do it ourself.
-    if current_desk_height > 1.0 {
-        desk.move_to_target(0.74).await?;
-    } else {
-        desk.move_to_target(1.12).await?;
-    }
-
     if cli_arguments.monitor && (!cli_arguments.stand && !cli_arguments.sit) {
         let desk_height = Arc::new(Mutex::new(0.0));
-        let previous_desk_height = 0.0;
+        let mut previous_desk_height = 0.0;
 
-        let _ = desk.monitor_height_notification_stream(desk_height.clone());
+        let _ = desk.monitor_height_notification_stream(desk_height.clone()).await?;
 
         loop {
             let height = *desk_height.lock().unwrap();
             if height != previous_desk_height {
-                log::info!("height: {height}")
+                log::info!("height: {height}");
+                previous_desk_height= height;
             }
 
             // small sleep between checks to not to spam CPU cycles.
